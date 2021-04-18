@@ -56,3 +56,19 @@ func (t *TaskController) CreateTask(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"task": newTask})
 }
+
+func (t *TaskController) DeleteTask(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
+		return
+	}
+
+	err = t.db.DeleteTask(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"result": true})
+}

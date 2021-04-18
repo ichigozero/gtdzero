@@ -11,5 +11,6 @@ func SetTaskRoutes(router *gin.Engine, tc *controllers.TaskController) {
 		v1.GET("/tasks", tc.GetTasks)
 		v1.GET("/task/:id", tc.GetTask)
 		v1.POST("/tasks", tc.CreateTask)
+		v1.DELETE("/task/:id", tc.DeleteTask)
 	}
 }

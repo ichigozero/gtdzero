@@ -16,4 +16,5 @@ type TaskDB interface {
 	GetTasks() []*Task
 	GetTask(id int) (*Task, error)
 	CreateTask(t *NewTaskTemplate) *Task
+	DeleteTask(id int) error
 }

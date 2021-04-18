@@ -9,4 +9,5 @@ type Task struct {
 
 type TaskDB interface {
 	GetTasks() []*Task
+	GetTask(id int) (*Task, error)
 }

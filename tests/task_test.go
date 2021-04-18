@@ -2,6 +2,7 @@ package tests
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -19,6 +20,15 @@ type mockDB struct {
 
 func (d *mockDB) GetTasks() []*models.Task {
 	return d.Tasks
+}
+
+func (d *mockDB) GetTask(id int) (*models.Task, error) {
+	for _, task := range d.Tasks {
+		if task.ID == id {
+			return task, nil
+		}
+	}
+	return nil, errors.New("not found")
 }
 
 func setUp() *gin.Engine {
@@ -62,4 +72,55 @@ func TestGetTasks(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+type taskJSON struct {
+	Task *models.Task `json:"task"`
+}
+
+func TestGetTask(t *testing.T) {
+	router := setUp()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/todo/api/v1.0/task/1", nil)
+	router.ServeHTTP(w, req)
+
+	var data taskJSON
+	err := json.NewDecoder(w.Body).Decode(&data)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+type errorJSON struct {
+	Error string `json:"error"`
+}
+
+func TestFailToGetTask(t *testing.T) {
+	router := setUp()
+	subtests := []struct {
+		uri          string
+		responseCode int
+	}{
+		{
+			uri:          "/todo/api/v1.0/task/a",
+			responseCode: http.StatusBadRequest,
+		},
+		{
+			uri:          "/todo/api/v1.0/task/3",
+			responseCode: http.StatusNotFound,
+		},
+	}
+
+	for _, st := range subtests {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", st.uri, nil)
+		router.ServeHTTP(w, req)
+
+		var data errorJSON
+		err := json.NewDecoder(w.Body).Decode(&data)
+
+		assert.Nil(t, err)
+		assert.Equal(t, st.responseCode, w.Code)
+	}
 }

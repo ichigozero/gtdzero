@@ -37,3 +37,22 @@ func (t *TaskController) GetTask(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"task": task})
 }
+
+func (t *TaskController) CreateTask(c *gin.Context) {
+	if c.Request.Header.Get("Content-Type") != "application/json" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
+		return
+	}
+
+	var json models.NewTaskTemplate
+
+	err := c.ShouldBindJSON(&json)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
+		return
+	}
+
+	newTask := t.db.CreateTask(&json)
+
+	c.JSON(http.StatusCreated, gin.H{"task": newTask})
+}

@@ -12,9 +12,16 @@ type NewTaskTemplate struct {
 	Description string `json:"description"`
 }
 
+type UpdateTaskTemplate struct {
+	Title       string `json:"title" binding:"required"`
+	Description string `json:"description"`
+	Done        bool   `json:"done"`
+}
+
 type TaskDB interface {
 	GetTasks() []*Task
 	GetTask(id int) (*Task, error)
 	CreateTask(t *NewTaskTemplate) *Task
+	UpdateTask(t *Task) error
 	DeleteTask(id int) error
 }

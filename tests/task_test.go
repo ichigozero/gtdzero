@@ -45,6 +45,10 @@ func (d *mockDB) CreateTask(t *models.NewTaskTemplate) *models.Task {
 	return newTask
 }
 
+func (d *mockDB) UpdateTask(t *models.Task) error {
+	return nil
+}
+
 func (d *mockDB) DeleteTask(id int) error {
 	for index, task := range d.Tasks {
 		if task.ID == id {
@@ -175,7 +179,7 @@ func TestCreateTask(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, w.Code)
 }
 
-type mockNewTaskTemplate struct{}
+type mockTemplate struct{}
 
 func TestFailToCreateTask(t *testing.T) {
 	router := setUp()
@@ -185,7 +189,7 @@ func TestFailToCreateTask(t *testing.T) {
 		message     string
 	}{
 		{
-			task:        &mockNewTaskTemplate{},
+			task:        &mockTemplate{},
 			contentType: "application/json",
 			message:     "Invalid input",
 		},
@@ -229,6 +233,97 @@ func TestFailToCreateTask(t *testing.T) {
 
 type resultJSON struct {
 	Result bool `json:"result"`
+}
+
+func TestUpdateTask(t *testing.T) {
+	router := setUp()
+	jsonStr, _ := json.Marshal(
+		&models.UpdateTaskTemplate{
+			Title:       "Title",
+			Description: "Description",
+			Done:        true,
+		},
+	)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(
+		"PUT",
+		"/todo/api/v1.0/task/1",
+		bytes.NewBuffer(jsonStr),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	router.ServeHTTP(w, req)
+
+	var data taskJSON
+	err := json.NewDecoder(w.Body).Decode(&data)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(
+		t,
+		&models.Task{
+			ID:          1,
+			Title:       "Title",
+			Description: "Description",
+			Done:        true,
+		},
+		data.Task,
+	)
+}
+
+func TestFailToUpdateTask(t *testing.T) {
+	router := setUp()
+	subtests := []struct {
+		uri          string
+		contentType  string
+		task         interface{}
+		responseCode int
+		message      string
+	}{
+		{
+			uri:          "/todo/api/v1.0/task/a",
+			contentType:  "application/json",
+			task:         &models.UpdateTaskTemplate{},
+			responseCode: http.StatusBadRequest,
+			message:      "Invalid ID",
+		},
+		{
+			uri:          "/todo/api/v1.0/task/3",
+			contentType:  "application/json",
+			task:         &models.UpdateTaskTemplate{},
+			responseCode: http.StatusNotFound,
+			message:      "Task not found",
+		},
+		{
+			uri:          "/todo/api/v1.0/task/1",
+			contentType:  "text/html",
+			task:         &models.UpdateTaskTemplate{},
+			responseCode: http.StatusBadRequest,
+			message:      "Invalid content type",
+		},
+		{
+			uri:          "/todo/api/v1.0/task/1",
+			contentType:  "application/json",
+			task:         mockTemplate{},
+			responseCode: http.StatusBadRequest,
+			message:      "Invalid input",
+		},
+	}
+
+	for _, st := range subtests {
+		jsonStr, _ := json.Marshal(st.task)
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("PUT", st.uri, bytes.NewBuffer(jsonStr))
+		req.Header.Set("Content-Type", st.contentType)
+		router.ServeHTTP(w, req)
+
+		var data errorJSON
+		err := json.NewDecoder(w.Body).Decode(&data)
+
+		assert.Nil(t, err)
+		assert.Equal(t, st.responseCode, w.Code, st.message)
+	}
 }
 
 func TestDeleteTask(t *testing.T) {

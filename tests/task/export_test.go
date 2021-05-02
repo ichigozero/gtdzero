@@ -17,7 +17,7 @@ func (d *mockDB) GetTasks() []*models.Task {
 	return d.Tasks
 }
 
-func (d *mockDB) GetTask(id int) (*models.Task, error) {
+func (d *mockDB) GetTask(id uint64) (*models.Task, error) {
 	for _, task := range d.Tasks {
 		if task.ID == id {
 			return task, nil
@@ -43,7 +43,7 @@ func (d *mockDB) UpdateTask(t *models.Task) error {
 	return nil
 }
 
-func (d *mockDB) DeleteTask(id int) error {
+func (d *mockDB) DeleteTask(id uint64) error {
 	for index, task := range d.Tasks {
 		if task.ID == id {
 			d.Tasks = append(d.Tasks[:index], d.Tasks[index+1:]...)

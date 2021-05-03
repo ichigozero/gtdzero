@@ -19,7 +19,7 @@ func NewAuthController(db models.UserDB) *AuthController {
 }
 
 func (a *AuthController) Login(c *gin.Context) {
-	var json models.User
+	var json models.UserLoginTemplate
 	err := c.ShouldBindJSON(&json)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})

@@ -2,8 +2,10 @@ package auth
 
 import (
 	"errors"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v7"
 	"github.com/ichigozero/gtdzero/controllers"
 	"github.com/ichigozero/gtdzero/models"
 	"github.com/ichigozero/gtdzero/routers"
@@ -25,6 +27,16 @@ func (d *mockDB) GetUser(
 	return nil, errors.New("not found")
 }
 
+type mockRedis struct{}
+
+func (r *mockRedis) Set(
+	key string,
+	value interface{},
+	expiration time.Duration,
+) *redis.StatusCmd {
+	return redis.NewStatusCmd()
+}
+
 func setUp() *gin.Engine {
 	r := gin.Default()
 	db := &mockDB{
@@ -36,13 +48,14 @@ func setUp() *gin.Engine {
 			},
 		},
 	}
+	rc := &mockRedis{}
 
-	ac := controllers.NewAuthController(db)
+	ac := controllers.NewAuthController(db, rc)
 	routers.SetAuthRoutes(r, ac)
 
 	return r
 }
 
 type tokenJSON struct {
-	Token string `json:"token"`
+	Tokens map[string]string `json:"tokens"`
 }

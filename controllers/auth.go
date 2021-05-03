@@ -2,20 +2,20 @@ package controllers
 
 import (
 	"net/http"
-	"os"
-	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/ichigozero/gtdzero/libs/authtoken"
 	"github.com/ichigozero/gtdzero/models"
+	"github.com/ichigozero/gtdzero/services/redis"
 )
 
 type AuthController struct {
 	db models.UserDB
+	rc redis.Client
 }
 
-func NewAuthController(db models.UserDB) *AuthController {
-	return &AuthController{db}
+func NewAuthController(db models.UserDB, rc redis.Client) *AuthController {
+	return &AuthController{db, rc}
 }
 
 func (a *AuthController) Login(c *gin.Context) {
@@ -32,27 +32,22 @@ func (a *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := createToken(user.ID)
+	at, err := authtoken.Create(user.ID)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, err.Error())
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"token": token})
-}
 
-func createToken(userid uint64) (string, error) {
-	// TODO use config file instead
-	os.Setenv("ACCESS_SECRET", "access-secret")
-
-	claims := jwt.MapClaims{}
-	claims["authorized"] = true
-	claims["user_id"] = userid
-	claims["exp"] = time.Now().Add(time.Minute * 15).Unix()
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedToken, err := token.SignedString([]byte(os.Getenv("ACCESS_SECRET")))
+	err = authtoken.Store(user.ID, at, a.rc)
 	if err != nil {
-		return "", err
+		c.JSON(http.StatusUnprocessableEntity, err.Error())
+		return
 	}
-	return signedToken, nil
+
+	tokens := map[string]string{
+		"access_token":  at.AccessToken,
+		"refresh_token": at.RefreshToken,
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"tokens": tokens})
 }

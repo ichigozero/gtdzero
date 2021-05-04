@@ -1,8 +1,12 @@
 package authtoken
 
 import (
+	"errors"
+	"fmt"
+	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -60,7 +64,40 @@ func Create(userID uint64) (*AuthToken, error) {
 	return t, nil
 }
 
-func Store(userID uint64, t *AuthToken, c redis.Client) error {
+func ValidateToken(r *http.Request) error {
+	token, err := verifyToken(r)
+	if err != nil {
+		return err
+	}
+
+	if _, ok := token.Claims.(jwt.Claims); !ok && !token.Valid {
+		return err
+	}
+
+	return nil
+}
+
+func verifyToken(r *http.Request) (*jwt.Token, error) {
+	bearerToken := r.Header.Get("Authorization")
+	strArr := strings.Split(bearerToken, " ")
+	if len(strArr) != 2 {
+		return nil, errors.New("")
+	}
+
+	token, err := jwt.Parse(strArr[1], func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("invalid signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("ACCESS_SECRET")), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
+}
+
+func StoreAuth(userID uint64, t *AuthToken, c redis.Client) error {
 	at := time.Unix(t.AccessExpiration, 0)
 	rt := time.Unix(t.RefreshExpiration, 0)
 	now := time.Now()
@@ -78,4 +115,68 @@ func Store(userID uint64, t *AuthToken, c redis.Client) error {
 	}
 
 	return nil
+}
+
+func FetchAuth(r *http.Request, c redis.Client) (uint64, error) {
+	ad, err := extractTokenMetadata(r)
+	if err != nil {
+		return 0, err
+	}
+
+	userid, err := c.Get(ad.AccessUuid).Result()
+	if err != nil {
+		return 0, err
+	}
+
+	userID, _ := strconv.ParseUint(userid, 10, 64)
+
+	return userID, nil
+}
+
+func DeleteAuth(r *http.Request, c redis.Client) (int64, error) {
+	ad, err := extractTokenMetadata(r)
+	if err != nil {
+		return 0, err
+	}
+
+	deleted, err := c.Del(ad.AccessUuid).Result()
+	if err != nil {
+		return 0, err
+	}
+
+	return deleted, nil
+}
+
+type accessDetails struct {
+	AccessUuid string
+	UserId     uint64
+}
+
+func extractTokenMetadata(r *http.Request) (*accessDetails, error) {
+	token, err := verifyToken(r)
+	if err != nil {
+		return nil, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if ok && token.Valid {
+		accessUuid, ok := claims["uuid"].(string)
+		if !ok {
+			return nil, err
+		}
+		userId, err := strconv.ParseUint(
+			fmt.Sprintf("%.f", claims["user_id"]),
+			10,
+			64,
+		)
+		if err != nil {
+			return nil, err
+		}
+		return &accessDetails{
+			AccessUuid: accessUuid,
+			UserId:     userId,
+		}, nil
+	}
+
+	return nil, err
 }

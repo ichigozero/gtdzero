@@ -38,7 +38,7 @@ func (a *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	err = authtoken.Store(user.ID, at, a.rc)
+	err = authtoken.StoreAuth(user.ID, at, a.rc)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, err.Error())
 		return

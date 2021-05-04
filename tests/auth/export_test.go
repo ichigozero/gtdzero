@@ -29,12 +29,20 @@ func (d *mockDB) GetUser(
 
 type mockRedis struct{}
 
+func (r *mockRedis) Del(keys ...string) *redis.IntCmd {
+	return redis.NewIntCmd()
+}
+
 func (r *mockRedis) Set(
 	key string,
 	value interface{},
 	expiration time.Duration,
 ) *redis.StatusCmd {
 	return redis.NewStatusCmd()
+}
+
+func (r *mockRedis) Get(key string) *redis.StringCmd {
+	return redis.NewStringCmd()
 }
 
 func setUp() *gin.Engine {

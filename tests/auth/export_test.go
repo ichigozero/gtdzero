@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v7"
 	"github.com/ichigozero/gtdzero/controllers"
+	"github.com/ichigozero/gtdzero/libs/auth"
 	"github.com/ichigozero/gtdzero/models"
 	"github.com/ichigozero/gtdzero/routers"
 )
@@ -56,9 +57,11 @@ func setUp() *gin.Engine {
 			},
 		},
 	}
-	rc := &mockRedis{}
 
-	ac := controllers.NewAuthController(db, rc)
+	tokenizer := auth.NewTokenizer()
+	client := auth.NewAuthClient(&mockRedis{})
+
+	ac := controllers.NewAuthController(db, tokenizer, client)
 	routers.SetAuthRoutes(r, ac)
 
 	return r

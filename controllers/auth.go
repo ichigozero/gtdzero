@@ -4,18 +4,26 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ichigozero/gtdzero/libs/authtoken"
+	"github.com/ichigozero/gtdzero/libs/auth"
 	"github.com/ichigozero/gtdzero/models"
-	"github.com/ichigozero/gtdzero/services/redis"
 )
 
 type AuthController struct {
-	db models.UserDB
-	rc redis.Client
+	db        models.UserDB
+	tokenizer auth.Tokenizer
+	client    auth.AuthClient
 }
 
-func NewAuthController(db models.UserDB, rc redis.Client) *AuthController {
-	return &AuthController{db, rc}
+func NewAuthController(
+	db models.UserDB,
+	tokenizer auth.Tokenizer,
+	client auth.AuthClient,
+) *AuthController {
+	return &AuthController{
+		db:        db,
+		tokenizer: tokenizer,
+		client:    client,
+	}
 }
 
 func (a *AuthController) Login(c *gin.Context) {
@@ -32,28 +40,28 @@ func (a *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	at, err := authtoken.Create(user.ID)
+	tokenDetails, err := a.tokenizer.Create(user.ID)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
-	err = authtoken.StoreAuth(user.ID, at, a.rc)
+	err = a.client.Store(user.ID, tokenDetails)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
 	tokens := map[string]string{
-		"access_token":  at.AccessToken,
-		"refresh_token": at.RefreshToken,
+		"access_token":  tokenDetails.AccessToken,
+		"refresh_token": tokenDetails.RefreshToken,
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"tokens": tokens})
 }
 
 func (a *AuthController) Logout(c *gin.Context) {
-	_, err := authtoken.DeleteAuth(c.Request, a.rc)
+	_, err := a.client.Delete(c.Request)
 
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, "unauthorized")

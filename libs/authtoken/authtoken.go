@@ -139,12 +139,12 @@ func DeleteAuth(r *http.Request, c redis.Client) (int64, error) {
 		return 0, err
 	}
 
-	deleted, err := c.Del(ad.AccessUuid).Result()
+	userID, err := c.Del(ad.AccessUuid).Result()
 	if err != nil {
 		return 0, err
 	}
 
-	return deleted, nil
+	return userID, nil
 }
 
 type accessDetails struct {

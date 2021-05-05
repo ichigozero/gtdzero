@@ -34,13 +34,13 @@ func (a *AuthController) Login(c *gin.Context) {
 
 	at, err := authtoken.Create(user.ID)
 	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, err.Error())
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
 	err = authtoken.StoreAuth(user.ID, at, a.rc)
 	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, err.Error())
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -50,4 +50,15 @@ func (a *AuthController) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"tokens": tokens})
+}
+
+func (a *AuthController) Logout(c *gin.Context) {
+	_, err := authtoken.DeleteAuth(c.Request, a.rc)
+
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }

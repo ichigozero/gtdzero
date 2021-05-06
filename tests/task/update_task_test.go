@@ -3,6 +3,7 @@ package task
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/xml"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -81,9 +82,13 @@ func TestFailToUpdateTask(t *testing.T) {
 			message:      "Task not found",
 		},
 		{
-			uri:          "/todo/api/v1.0/task/1",
-			contentType:  "text/html",
-			task:         task,
+			uri:         "/todo/api/v1.0/task/1",
+			contentType: "text/xml",
+			task: &models.UpdateTaskTemplate{
+				Title:       "Title",
+				Description: "Description",
+				Done:        true,
+			},
 			responseCode: http.StatusBadRequest,
 			message:      "Invalid content type",
 		},
@@ -97,10 +102,17 @@ func TestFailToUpdateTask(t *testing.T) {
 	}
 
 	for _, st := range subtests {
-		jsonStr, _ := json.Marshal(st.task)
-
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("PUT", st.uri, bytes.NewBuffer(jsonStr))
+
+		var buf []byte
+
+		if st.contentType == "application/json" {
+			buf, _ = json.Marshal(st.task)
+		} else {
+			buf, _ = xml.Marshal(st.task)
+		}
+
+		req, _ := http.NewRequest("PUT", st.uri, bytes.NewBuffer(buf))
 		req.Header.Set("Content-Type", st.contentType)
 		router.ServeHTTP(w, req)
 

@@ -3,6 +3,7 @@ package task
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/xml"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -26,7 +27,6 @@ func TestCreateTask(t *testing.T) {
 		"/todo/api/v1.0/tasks",
 		bytes.NewBuffer(jsonStr),
 	)
-	req.Header.Set("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
 
 	var data taskJSON
@@ -63,19 +63,26 @@ func TestFailToCreateTask(t *testing.T) {
 				Title:       "Title",
 				Description: "Description",
 			},
-			contentType: "text/html",
+			contentType: "text/xml",
 			message:     "Invalid content type",
 		},
 	}
 
 	for _, st := range subtests {
-		jsonStr, _ := json.Marshal(st.task)
-
 		w := httptest.NewRecorder()
+
+		var buf []byte
+
+		if st.contentType == "application/json" {
+			buf, _ = json.Marshal(st.task)
+		} else {
+			buf, _ = xml.Marshal(st.task)
+		}
+
 		req, _ := http.NewRequest(
 			"POST",
 			"/todo/api/v1.0/tasks",
-			bytes.NewBuffer(jsonStr),
+			bytes.NewBuffer(buf),
 		)
 		req.Header.Set("Content-Type", st.contentType)
 		router.ServeHTTP(w, req)

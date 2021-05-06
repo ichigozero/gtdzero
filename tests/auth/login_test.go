@@ -13,17 +13,9 @@ import (
 
 func TestLogin(t *testing.T) {
 	router := setUp()
-	jsonStr, _ := json.Marshal(
-		&models.UserLoginTemplate{
-			Username: "john",
-			Password: "password",
-		},
-	)
-
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/login", bytes.NewBuffer(jsonStr))
-	req.Header.Set("Content-Type", "application/json")
-	router.ServeHTTP(w, req)
+
+	login(router, w)
 
 	var data tokenJSON
 	err := json.NewDecoder(w.Body).Decode(&data)
@@ -65,7 +57,7 @@ func TestFailedLogin(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 		router.ServeHTTP(w, req)
 
-		var data tokenJSON
+		var data errorJSON
 		err := json.NewDecoder(w.Body).Decode(&data)
 
 		assert.Nil(t, err)

@@ -64,9 +64,9 @@ func (a *AuthController) Logout(c *gin.Context) {
 	_, err := a.client.Delete(c.Request)
 
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, "unauthorized")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
+	c.JSON(http.StatusOK, gin.H{"result": true})
 }

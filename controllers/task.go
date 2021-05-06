@@ -39,11 +39,6 @@ func (t *TaskController) GetTask(c *gin.Context) {
 }
 
 func (t *TaskController) CreateTask(c *gin.Context) {
-	if c.Request.Header.Get("Content-Type") != "application/json" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
-		return
-	}
-
 	var json models.NewTaskTemplate
 
 	err := c.ShouldBindJSON(&json)
@@ -58,11 +53,6 @@ func (t *TaskController) CreateTask(c *gin.Context) {
 }
 
 func (t *TaskController) UpdateTask(c *gin.Context) {
-	if c.Request.Header.Get("Content-Type") != "application/json" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
-		return
-	}
-
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})

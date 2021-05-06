@@ -53,6 +53,12 @@ func TestUpdateTask(t *testing.T) {
 
 func TestFailToUpdateTask(t *testing.T) {
 	router := setUp()
+	task := &models.UpdateTaskTemplate{
+		Title:       "Title",
+		Description: "Description",
+		Done:        true,
+	}
+
 	subtests := []struct {
 		uri          string
 		contentType  string
@@ -63,21 +69,21 @@ func TestFailToUpdateTask(t *testing.T) {
 		{
 			uri:          "/todo/api/v1.0/task/a",
 			contentType:  "application/json",
-			task:         &models.UpdateTaskTemplate{},
+			task:         task,
 			responseCode: http.StatusBadRequest,
 			message:      "Invalid ID",
 		},
 		{
 			uri:          "/todo/api/v1.0/task/3",
 			contentType:  "application/json",
-			task:         &models.UpdateTaskTemplate{},
+			task:         task,
 			responseCode: http.StatusNotFound,
 			message:      "Task not found",
 		},
 		{
 			uri:          "/todo/api/v1.0/task/1",
 			contentType:  "text/html",
-			task:         &models.UpdateTaskTemplate{},
+			task:         task,
 			responseCode: http.StatusBadRequest,
 			message:      "Invalid content type",
 		},

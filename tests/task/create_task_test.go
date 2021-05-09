@@ -9,11 +9,12 @@ import (
 	"testing"
 
 	"github.com/ichigozero/gtdzero/models"
+	"github.com/ichigozero/gtdzero/tests"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateTask(t *testing.T) {
-	router := setUp()
+	router := tests.SetUp()
 	jsonStr, _ := json.Marshal(
 		&models.NewTaskTemplate{
 			Title:       "Title",
@@ -39,7 +40,7 @@ func TestCreateTask(t *testing.T) {
 type mockTemplate struct{}
 
 func TestFailToCreateTask(t *testing.T) {
-	router := setUp()
+	router := tests.SetUp()
 	subtests := []struct {
 		task        interface{}
 		contentType string
@@ -87,7 +88,7 @@ func TestFailToCreateTask(t *testing.T) {
 		req.Header.Set("Content-Type", st.contentType)
 		router.ServeHTTP(w, req)
 
-		var data errorJSON
+		var data tests.ErrorJSON
 		err := json.NewDecoder(w.Body).Decode(&data)
 
 		assert.Nil(t, err)

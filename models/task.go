@@ -5,6 +5,8 @@ type Task struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Done        bool   `json:"done"`
+	UserID      uint64 `json:"userid"`
+	User        User   `json:"user"`
 }
 
 type NewTaskTemplate struct {
@@ -19,7 +21,7 @@ type UpdateTaskTemplate struct {
 }
 
 type TaskDB interface {
-	GetTasks() []*Task
+	GetTasks(userID uint64) []*Task
 	GetTask(id uint64) (*Task, error)
 	CreateTask(t *NewTaskTemplate) *Task
 	UpdateTask(t *Task) error

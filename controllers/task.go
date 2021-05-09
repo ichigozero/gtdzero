@@ -5,19 +5,30 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ichigozero/gtdzero/libs/auth"
 	"github.com/ichigozero/gtdzero/models"
 )
 
 type TaskController struct {
-	db models.TaskDB
+	db     models.TaskDB
+	client auth.AuthClient
 }
 
-func NewTaskController(db models.TaskDB) *TaskController {
-	return &TaskController{db}
+func NewTaskController(
+	db models.TaskDB,
+	client auth.AuthClient,
+) *TaskController {
+	return &TaskController{db, client}
 }
 
 func (t *TaskController) GetTasks(c *gin.Context) {
-	tasks := t.db.GetTasks()
+	userID, err := t.client.Fetch(c.Request)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	tasks := t.db.GetTasks(userID)
 
 	c.JSON(http.StatusOK, gin.H{"tasks": tasks})
 }

@@ -9,15 +9,12 @@ import (
 	"testing"
 
 	"github.com/ichigozero/gtdzero/models"
+	"github.com/ichigozero/gtdzero/tests"
 	"github.com/stretchr/testify/assert"
 )
 
-type resultJSON struct {
-	Result bool `json:"result"`
-}
-
 func TestUpdateTask(t *testing.T) {
-	router := setUp()
+	router := tests.SetUp()
 	jsonStr, _ := json.Marshal(
 		&models.UpdateTaskTemplate{
 			Title:       "Title",
@@ -53,7 +50,7 @@ func TestUpdateTask(t *testing.T) {
 }
 
 func TestFailToUpdateTask(t *testing.T) {
-	router := setUp()
+	router := tests.SetUp()
 	task := &models.UpdateTaskTemplate{
 		Title:       "Title",
 		Description: "Description",
@@ -116,7 +113,7 @@ func TestFailToUpdateTask(t *testing.T) {
 		req.Header.Set("Content-Type", st.contentType)
 		router.ServeHTTP(w, req)
 
-		var data errorJSON
+		var data tests.ErrorJSON
 		err := json.NewDecoder(w.Body).Decode(&data)
 
 		assert.Nil(t, err)

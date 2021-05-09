@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/ichigozero/gtdzero/models"
+	"github.com/ichigozero/gtdzero/tests"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,9 +16,12 @@ type tasksJSON struct {
 }
 
 func TestGetTasks(t *testing.T) {
-	router := setUp()
+	router := tests.SetUp()
 
 	w := httptest.NewRecorder()
+	tests.Login(router, w)
+
+	w = httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/todo/api/v1.0/tasks", nil)
 	router.ServeHTTP(w, req)
 
@@ -33,7 +37,7 @@ type taskJSON struct {
 }
 
 func TestGetTask(t *testing.T) {
-	router := setUp()
+	router := tests.SetUp()
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/todo/api/v1.0/task/1", nil)
@@ -46,12 +50,8 @@ func TestGetTask(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
-type errorJSON struct {
-	Error string `json:"error"`
-}
-
 func TestFailToGetTask(t *testing.T) {
-	router := setUp()
+	router := tests.SetUp()
 	subtests := []struct {
 		uri          string
 		responseCode int
@@ -71,7 +71,7 @@ func TestFailToGetTask(t *testing.T) {
 		req, _ := http.NewRequest("GET", st.uri, nil)
 		router.ServeHTTP(w, req)
 
-		var data errorJSON
+		var data tests.ErrorJSON
 		err := json.NewDecoder(w.Body).Decode(&data)
 
 		assert.Nil(t, err)

@@ -9,16 +9,17 @@ import (
 	"testing"
 
 	"github.com/ichigozero/gtdzero/models"
+	"github.com/ichigozero/gtdzero/tests"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLogin(t *testing.T) {
-	router := setUp()
+	router := tests.SetUp()
 	w := httptest.NewRecorder()
 
-	login(router, w)
+	tests.Login(router, w)
 
-	var data tokenJSON
+	var data tests.TokenJSON
 	err := json.NewDecoder(w.Body).Decode(&data)
 
 	assert.Nil(t, err)
@@ -26,7 +27,7 @@ func TestLogin(t *testing.T) {
 }
 
 func TestFailedLogin(t *testing.T) {
-	router := setUp()
+	router := tests.SetUp()
 	subtests := []struct {
 		user         interface{}
 		contentType  string
@@ -77,7 +78,7 @@ func TestFailedLogin(t *testing.T) {
 		req.Header.Set("Content-Type", st.contentType)
 		router.ServeHTTP(w, req)
 
-		var data errorJSON
+		var data tests.ErrorJSON
 		err := json.NewDecoder(w.Body).Decode(&data)
 
 		assert.Nil(t, err)

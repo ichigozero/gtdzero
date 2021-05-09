@@ -7,19 +7,19 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ichigozero/gtdzero/tests"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLogout(t *testing.T) {
-	router := setUp()
+	router := tests.SetUp()
 	w := httptest.NewRecorder()
 
-	login(router, w)
+	tests.Login(router, w)
 
-	var tk tokenJSON
+	var tk tests.TokenJSON
 	json.NewDecoder(w.Body).Decode(&tk)
 
-	//TODO mock RedisClient
 	w = httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/logout", nil)
 	req.Header.Set("Content-Type", "application/json")
@@ -29,7 +29,7 @@ func TestLogout(t *testing.T) {
 	)
 	router.ServeHTTP(w, req)
 
-	var re resultJSON
+	var re tests.ResultJSON
 	err := json.NewDecoder(w.Body).Decode(&re)
 
 	assert.Nil(t, err)
@@ -37,14 +37,14 @@ func TestLogout(t *testing.T) {
 }
 
 func TestFailedLogout(t *testing.T) {
-	router := setUp()
+	router := tests.SetUp()
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/logout", nil)
 	req.Header.Set("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
 
-	var data errorJSON
+	var data tests.ErrorJSON
 	err := json.NewDecoder(w.Body).Decode(&data)
 
 	assert.Nil(t, err)

@@ -6,17 +6,18 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ichigozero/gtdzero/tests"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestDeleteTask(t *testing.T) {
-	router := setUp()
+	router := tests.SetUp()
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("DELETE", "/todo/api/v1.0/task/1", nil)
 	router.ServeHTTP(w, req)
 
-	var data resultJSON
+	var data tests.ResultJSON
 	err := json.NewDecoder(w.Body).Decode(&data)
 
 	assert.Nil(t, err)
@@ -24,7 +25,7 @@ func TestDeleteTask(t *testing.T) {
 }
 
 func TestFailToDeleteTask(t *testing.T) {
-	router := setUp()
+	router := tests.SetUp()
 	subtests := []struct {
 		uri          string
 		responseCode int
@@ -44,7 +45,7 @@ func TestFailToDeleteTask(t *testing.T) {
 		req, _ := http.NewRequest("DELETE", st.uri, nil)
 		router.ServeHTTP(w, req)
 
-		var data errorJSON
+		var data tests.ErrorJSON
 		err := json.NewDecoder(w.Body).Decode(&data)
 
 		assert.Nil(t, err)

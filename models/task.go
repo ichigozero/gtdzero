@@ -22,7 +22,7 @@ type UpdateTaskTemplate struct {
 
 type TaskDB interface {
 	GetTasks(userID uint64) []*Task
-	GetTask(id uint64) (*Task, error)
+	GetTask(userID uint64, taskID uint64) (*Task, error)
 	CreateTask(t *NewTaskTemplate) *Task
 	UpdateTask(t *Task) error
 	DeleteTask(id uint64) error

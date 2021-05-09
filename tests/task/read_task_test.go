@@ -17,8 +17,8 @@ type tasksJSON struct {
 
 func TestGetTasks(t *testing.T) {
 	router := tests.SetUp()
-
 	w := httptest.NewRecorder()
+
 	tests.Login(router, w)
 
 	w = httptest.NewRecorder()
@@ -38,8 +38,11 @@ type taskJSON struct {
 
 func TestGetTask(t *testing.T) {
 	router := tests.SetUp()
-
 	w := httptest.NewRecorder()
+
+	tests.Login(router, w)
+
+	w = httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/todo/api/v1.0/task/1", nil)
 	router.ServeHTTP(w, req)
 
@@ -65,6 +68,10 @@ func TestFailToGetTask(t *testing.T) {
 			responseCode: http.StatusNotFound,
 		},
 	}
+
+	w := httptest.NewRecorder()
+
+	tests.Login(router, w)
 
 	for _, st := range subtests {
 		w := httptest.NewRecorder()

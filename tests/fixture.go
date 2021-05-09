@@ -46,9 +46,12 @@ func (d *mockTaskDB) GetTasks(userID uint64) []*models.Task {
 	return d.Tasks
 }
 
-func (d *mockTaskDB) GetTask(id uint64) (*models.Task, error) {
+func (d *mockTaskDB) GetTask(
+	userID uint64,
+	taskID uint64,
+) (*models.Task, error) {
 	for _, task := range d.Tasks {
-		if task.ID == id {
+		if task.UserID == userID && task.ID == taskID {
 			return task, nil
 		}
 	}

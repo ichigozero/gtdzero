@@ -15,6 +15,8 @@ type Tokenizer interface {
 
 type tokenizer struct{}
 
+var _ Tokenizer = (*tokenizer)(nil)
+
 func NewTokenizer() Tokenizer {
 	return &tokenizer{}
 }

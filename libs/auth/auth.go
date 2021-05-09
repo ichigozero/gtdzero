@@ -17,16 +17,10 @@ type AuthClient interface {
 }
 
 type authClient struct {
-	client RedisClient
+	client *redis.Client
 }
 
-type RedisClient interface {
-	Del(keys ...string) *redis.IntCmd
-	Get(key string) *redis.StringCmd
-	Set(key string, value interface{}, expiration time.Duration) *redis.StatusCmd
-}
-
-func NewAuthClient(client RedisClient) AuthClient {
+func NewAuthClient(client *redis.Client) AuthClient {
 	return &authClient{client: client}
 }
 

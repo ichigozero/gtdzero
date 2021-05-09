@@ -6,10 +6,8 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v7"
 	"github.com/ichigozero/gtdzero/controllers"
 	"github.com/ichigozero/gtdzero/libs/auth"
 	"github.com/ichigozero/gtdzero/models"
@@ -32,22 +30,28 @@ func (d *mockDB) GetUser(
 	return nil, errors.New("not found")
 }
 
-type mockRedis struct{}
-
-func (r *mockRedis) Del(keys ...string) *redis.IntCmd {
-	return redis.NewIntCmd()
+type authClientMock struct {
+	userID uint64
 }
 
-func (r *mockRedis) Set(
-	key string,
-	value interface{},
-	expiration time.Duration,
-) *redis.StatusCmd {
-	return redis.NewStatusCmd()
+func (a *authClientMock) Store(userID uint64, td *auth.TokenDetails) error {
+	a.userID = userID
+	return nil
 }
 
-func (r *mockRedis) Get(key string) *redis.StringCmd {
-	return redis.NewStringCmd()
+func (a *authClientMock) Fetch(r *http.Request) (uint64, error) {
+	return a.userID, nil
+}
+
+func (a *authClientMock) Delete(r *http.Request) (uint64, error) {
+	if a.userID == 0 {
+		return a.userID, errors.New("")
+	}
+
+	deleted := a.userID
+	a.userID = 0
+
+	return deleted, nil
 }
 
 func setUp() *gin.Engine {
@@ -63,7 +67,7 @@ func setUp() *gin.Engine {
 		},
 	}
 	tokenizer := auth.NewTokenizer()
-	client := auth.NewAuthClient(&mockRedis{})
+	client := &authClientMock{}
 
 	ac := controllers.NewAuthController(db, tokenizer, client)
 	routers.SetAuthRoutes(r, ac)

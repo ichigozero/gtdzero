@@ -77,7 +77,7 @@ func TestFailToGetTask(t *testing.T) {
 	accessToken, _ := tests.Login(router, w)
 
 	for _, st := range subtests {
-		w := httptest.NewRecorder()
+		w = httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", st.uri, nil)
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
 		router.ServeHTTP(w, req)

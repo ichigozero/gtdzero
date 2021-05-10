@@ -15,18 +15,12 @@ func TestLogout(t *testing.T) {
 	router := tests.SetUp()
 	w := httptest.NewRecorder()
 
-	tests.Login(router, w)
-
-	var tk tests.TokenJSON
-	json.NewDecoder(w.Body).Decode(&tk)
+	accessToken, _ := tests.Login(router, w)
 
 	w = httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/logout", nil)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set(
-		"Authorization",
-		fmt.Sprintf("Bearer %s", tk.Tokens["access_token"]),
-	)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
 	router.ServeHTTP(w, req)
 
 	var re tests.ResultJSON

@@ -12,7 +12,7 @@ func SetTaskRoutes(router *gin.Engine, tc *controllers.TaskController) {
 		v1.GET("/tasks", auth.TokenValidator(), tc.GetTasks)
 		v1.GET("/task/:id", auth.TokenValidator(), tc.GetTask)
 		v1.POST("/tasks", tc.CreateTask)
-		v1.PUT("/task/:id", tc.UpdateTask)
+		v1.PUT("/task/:id", auth.TokenValidator(), tc.UpdateTask)
 		v1.DELETE("/task/:id", tc.DeleteTask)
 	}
 }

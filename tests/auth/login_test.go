@@ -17,10 +17,7 @@ func TestLogin(t *testing.T) {
 	router := tests.SetUp()
 	w := httptest.NewRecorder()
 
-	tests.Login(router, w)
-
-	var data tests.TokenJSON
-	err := json.NewDecoder(w.Body).Decode(&data)
+	_, err := tests.Login(router, w)
 
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusCreated, w.Code)

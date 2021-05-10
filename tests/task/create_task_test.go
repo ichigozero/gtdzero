@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -21,13 +22,18 @@ func TestCreateTask(t *testing.T) {
 			Description: "Description",
 		},
 	)
-
 	w := httptest.NewRecorder()
+
+	accessToken, _ := tests.Login(router, w)
+
+	w = httptest.NewRecorder()
 	req, _ := http.NewRequest(
 		"POST",
 		"/todo/api/v1.0/tasks",
 		bytes.NewBuffer(jsonStr),
 	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
 	router.ServeHTTP(w, req)
 
 	var data taskJSON
@@ -69,8 +75,12 @@ func TestFailToCreateTask(t *testing.T) {
 		},
 	}
 
+	w := httptest.NewRecorder()
+
+	accessToken, _ := tests.Login(router, w)
+
 	for _, st := range subtests {
-		w := httptest.NewRecorder()
+		w = httptest.NewRecorder()
 
 		var buf []byte
 
@@ -86,6 +96,7 @@ func TestFailToCreateTask(t *testing.T) {
 			bytes.NewBuffer(buf),
 		)
 		req.Header.Set("Content-Type", st.contentType)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
 		router.ServeHTTP(w, req)
 
 		var data tests.ErrorJSON

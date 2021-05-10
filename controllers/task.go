@@ -56,15 +56,21 @@ func (t *TaskController) GetTask(c *gin.Context) {
 }
 
 func (t *TaskController) CreateTask(c *gin.Context) {
+	userID, err := t.client.Fetch(c.Request)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	var json models.NewTaskTemplate
 
-	err := c.ShouldBindJSON(&json)
+	err = c.ShouldBindJSON(&json)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
 		return
 	}
 
-	newTask := t.db.CreateTask(&json)
+	newTask := t.db.CreateTask(userID, &json)
 
 	c.JSON(http.StatusCreated, gin.H{"task": newTask})
 }
@@ -109,13 +115,19 @@ func (t *TaskController) UpdateTask(c *gin.Context) {
 }
 
 func (t *TaskController) DeleteTask(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	userID, err := t.client.Fetch(c.Request)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	taskID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
 		return
 	}
 
-	err = t.db.DeleteTask(id)
+	err = t.db.DeleteTask(userID, taskID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return

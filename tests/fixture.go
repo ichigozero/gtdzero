@@ -58,12 +58,16 @@ func (d *mockTaskDB) GetTask(
 	return nil, errors.New("not found")
 }
 
-func (d *mockTaskDB) CreateTask(t *models.NewTaskTemplate) *models.Task {
+func (d *mockTaskDB) CreateTask(
+	userID uint64,
+	t *models.NewTaskTemplate,
+) *models.Task {
 	newTask := &models.Task{
 		ID:          d.Tasks[len(d.Tasks)-1].ID + 1,
 		Title:       t.Title,
 		Description: t.Description,
 		Done:        false,
+		UserID:      userID,
 	}
 
 	d.Tasks = append(d.Tasks, newTask)
@@ -75,9 +79,9 @@ func (d *mockTaskDB) UpdateTask(t *models.Task) error {
 	return nil
 }
 
-func (d *mockTaskDB) DeleteTask(id uint64) error {
+func (d *mockTaskDB) DeleteTask(userID uint64, taskID uint64) error {
 	for index, task := range d.Tasks {
-		if task.ID == id {
+		if task.UserID == userID && task.ID == taskID {
 			d.Tasks = append(d.Tasks[:index], d.Tasks[index+1:]...)
 			return nil
 		}

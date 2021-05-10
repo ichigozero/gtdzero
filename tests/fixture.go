@@ -129,7 +129,7 @@ func SetUp() *gin.Engine {
 	return r
 }
 
-func Login(router *gin.Engine, w *httptest.ResponseRecorder) {
+func Login(router *gin.Engine, w *httptest.ResponseRecorder) (string, error) {
 	jsonStr, _ := json.Marshal(
 		&models.UserLoginTemplate{
 			Username: "john",
@@ -140,6 +140,15 @@ func Login(router *gin.Engine, w *httptest.ResponseRecorder) {
 	req, _ := http.NewRequest("POST", "/login", bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
+
+	var data TokenJSON
+	err := json.NewDecoder(w.Body).Decode(&data)
+
+	if err != nil {
+		return "", errors.New("unauthorized")
+	}
+
+	return data.Tokens["access_token"], nil
 }
 
 type AuthClientMock struct {

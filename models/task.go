@@ -1,10 +1,12 @@
 package models
 
 type Task struct {
-	ID          int    `json:"id" gorm:"primary_key"`
+	ID          uint64 `json:"id" gorm:"primary_key"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Done        bool   `json:"done"`
+	UserID      uint64 `json:"userid"`
+	User        User   `json:"user"`
 }
 
 type NewTaskTemplate struct {
@@ -19,9 +21,9 @@ type UpdateTaskTemplate struct {
 }
 
 type TaskDB interface {
-	GetTasks() []*Task
-	GetTask(id int) (*Task, error)
-	CreateTask(t *NewTaskTemplate) *Task
+	GetTasks(userID uint64) []*Task
+	GetTask(userID uint64, taskID uint64) (*Task, error)
+	CreateTask(userID uint64, t *NewTaskTemplate) *Task
 	UpdateTask(t *Task) error
-	DeleteTask(id int) error
+	DeleteTask(userID uint64, taskID uint64) error
 }

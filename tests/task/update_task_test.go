@@ -3,20 +3,19 @@ package task
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/xml"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/ichigozero/gtdzero/models"
+	"github.com/ichigozero/gtdzero/tests"
 	"github.com/stretchr/testify/assert"
 )
 
-type resultJSON struct {
-	Result bool `json:"result"`
-}
-
 func TestUpdateTask(t *testing.T) {
-	router := setUp()
+	router := tests.SetUp()
 	jsonStr, _ := json.Marshal(
 		&models.UpdateTaskTemplate{
 			Title:       "Title",
@@ -24,14 +23,18 @@ func TestUpdateTask(t *testing.T) {
 			Done:        true,
 		},
 	)
-
 	w := httptest.NewRecorder()
+
+	accessToken, _ := tests.Login(router, w)
+
+	w = httptest.NewRecorder()
 	req, _ := http.NewRequest(
 		"PUT",
 		"/todo/api/v1.0/task/1",
 		bytes.NewBuffer(jsonStr),
 	)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
 	router.ServeHTTP(w, req)
 
 	var data taskJSON
@@ -52,7 +55,13 @@ func TestUpdateTask(t *testing.T) {
 }
 
 func TestFailToUpdateTask(t *testing.T) {
-	router := setUp()
+	router := tests.SetUp()
+	task := &models.UpdateTaskTemplate{
+		Title:       "Title",
+		Description: "Description",
+		Done:        true,
+	}
+
 	subtests := []struct {
 		uri          string
 		contentType  string
@@ -63,21 +72,25 @@ func TestFailToUpdateTask(t *testing.T) {
 		{
 			uri:          "/todo/api/v1.0/task/a",
 			contentType:  "application/json",
-			task:         &models.UpdateTaskTemplate{},
+			task:         task,
 			responseCode: http.StatusBadRequest,
 			message:      "Invalid ID",
 		},
 		{
 			uri:          "/todo/api/v1.0/task/3",
 			contentType:  "application/json",
-			task:         &models.UpdateTaskTemplate{},
+			task:         task,
 			responseCode: http.StatusNotFound,
 			message:      "Task not found",
 		},
 		{
-			uri:          "/todo/api/v1.0/task/1",
-			contentType:  "text/html",
-			task:         &models.UpdateTaskTemplate{},
+			uri:         "/todo/api/v1.0/task/1",
+			contentType: "text/xml",
+			task: &models.UpdateTaskTemplate{
+				Title:       "Title",
+				Description: "Description",
+				Done:        true,
+			},
 			responseCode: http.StatusBadRequest,
 			message:      "Invalid content type",
 		},
@@ -90,15 +103,27 @@ func TestFailToUpdateTask(t *testing.T) {
 		},
 	}
 
-	for _, st := range subtests {
-		jsonStr, _ := json.Marshal(st.task)
+	w := httptest.NewRecorder()
 
-		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("PUT", st.uri, bytes.NewBuffer(jsonStr))
+	accessToken, _ := tests.Login(router, w)
+
+	for _, st := range subtests {
+		w = httptest.NewRecorder()
+
+		var buf []byte
+
+		if st.contentType == "application/json" {
+			buf, _ = json.Marshal(st.task)
+		} else {
+			buf, _ = xml.Marshal(st.task)
+		}
+
+		req, _ := http.NewRequest("PUT", st.uri, bytes.NewBuffer(buf))
 		req.Header.Set("Content-Type", st.contentType)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
 		router.ServeHTTP(w, req)
 
-		var data errorJSON
+		var data tests.ErrorJSON
 		err := json.NewDecoder(w.Body).Decode(&data)
 
 		assert.Nil(t, err)

@@ -5,31 +5,48 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ichigozero/gtdzero/libs/auth"
 	"github.com/ichigozero/gtdzero/models"
 )
 
 type TaskController struct {
-	db models.TaskDB
+	db     models.TaskDB
+	client auth.AuthClient
 }
 
-func NewTaskController(db models.TaskDB) *TaskController {
-	return &TaskController{db}
+func NewTaskController(
+	db models.TaskDB,
+	client auth.AuthClient,
+) *TaskController {
+	return &TaskController{db, client}
 }
 
 func (t *TaskController) GetTasks(c *gin.Context) {
-	tasks := t.db.GetTasks()
+	userID, err := t.client.Fetch(c.Request)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	tasks := t.db.GetTasks(userID)
 
 	c.JSON(http.StatusOK, gin.H{"tasks": tasks})
 }
 
 func (t *TaskController) GetTask(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	userID, err := t.client.Fetch(c.Request)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	taskID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
 		return
 	}
 
-	task, err := t.db.GetTask(id)
+	task, err := t.db.GetTask(userID, taskID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
@@ -39,37 +56,39 @@ func (t *TaskController) GetTask(c *gin.Context) {
 }
 
 func (t *TaskController) CreateTask(c *gin.Context) {
-	if c.Request.Header.Get("Content-Type") != "application/json" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
+	userID, err := t.client.Fetch(c.Request)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
 	var json models.NewTaskTemplate
 
-	err := c.ShouldBindJSON(&json)
+	err = c.ShouldBindJSON(&json)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
 		return
 	}
 
-	newTask := t.db.CreateTask(&json)
+	newTask := t.db.CreateTask(userID, &json)
 
 	c.JSON(http.StatusCreated, gin.H{"task": newTask})
 }
 
 func (t *TaskController) UpdateTask(c *gin.Context) {
-	if c.Request.Header.Get("Content-Type") != "application/json" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
+	userID, err := t.client.Fetch(c.Request)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	id, err := strconv.Atoi(c.Param("id"))
+	taskID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
 		return
 	}
 
-	_, err = t.db.GetTask(id)
+	_, err = t.db.GetTask(userID, taskID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
@@ -84,7 +103,7 @@ func (t *TaskController) UpdateTask(c *gin.Context) {
 	}
 
 	updatedTask := &models.Task{
-		ID:          id,
+		ID:          taskID,
 		Title:       json.Title,
 		Description: json.Description,
 		Done:        json.Done,
@@ -96,13 +115,19 @@ func (t *TaskController) UpdateTask(c *gin.Context) {
 }
 
 func (t *TaskController) DeleteTask(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	userID, err := t.client.Fetch(c.Request)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	taskID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
 		return
 	}
 
-	err = t.db.DeleteTask(id)
+	err = t.db.DeleteTask(userID, taskID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return

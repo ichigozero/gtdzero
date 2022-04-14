@@ -6,7 +6,6 @@ type Task struct {
 	Description string `json:"description"`
 	Done        bool   `json:"done"`
 	UserID      uint64 `json:"userid"`
-	User        User   `json:"user"`
 }
 
 type NewTaskTemplate struct {

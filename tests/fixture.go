@@ -38,7 +38,7 @@ func (d *mockTaskDB) GetTasks(userID uint64) []*models.Task {
 	var tasks []*models.Task
 
 	for _, task := range d.Tasks {
-		if task.User.ID == userID {
+		if task.UserID == userID {
 			tasks = append(tasks, task)
 		}
 	}
@@ -90,15 +90,14 @@ func (d *mockTaskDB) DeleteTask(userID uint64, taskID uint64) error {
 	return errors.New("not found")
 }
 
-func SetUp() *gin.Engine {
-	r := gin.Default()
-
+func Setup() *gin.Engine {
 	user := models.User{
 		ID:       1,
 		Username: "john",
 		Password: "password",
 	}
 
+	userDB := &mockUserDB{[]*models.User{&user}}
 	taskDB := &mockTaskDB{
 		[]*models.Task{
 			{
@@ -107,7 +106,6 @@ func SetUp() *gin.Engine {
 				Description: "Milk, Cheese, Pizza, Fruit, Tylenol",
 				Done:        false,
 				UserID:      user.ID,
-				User:        user,
 			},
 			{
 				ID:          2,
@@ -115,15 +113,13 @@ func SetUp() *gin.Engine {
 				Description: "Need to find a good Go tutorial on the web",
 				Done:        false,
 				UserID:      user.ID,
-				User:        user,
 			},
 		},
 	}
-
-	userDB := &mockUserDB{[]*models.User{&user}}
 	tokenizer := auth.NewTokenizer()
 	authClient := &AuthClientMock{}
 
+	r := gin.Default()
 	ac := controllers.NewAuthController(userDB, tokenizer, authClient)
 	tc := controllers.NewTaskController(taskDB, authClient)
 
@@ -147,7 +143,6 @@ func Login(router *gin.Engine, w *httptest.ResponseRecorder) (string, error) {
 
 	var data TokenJSON
 	err := json.NewDecoder(w.Body).Decode(&data)
-
 	if err != nil {
 		return "", errors.New("unauthorized")
 	}

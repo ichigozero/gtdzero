@@ -12,7 +12,7 @@ import (
 )
 
 func TestDeleteTask(t *testing.T) {
-	router := tests.SetUp()
+	router := tests.Setup()
 	w := httptest.NewRecorder()
 
 	accessToken, _ := tests.Login(router, w)
@@ -31,7 +31,7 @@ func TestDeleteTask(t *testing.T) {
 }
 
 func TestFailToDeleteTask(t *testing.T) {
-	router := tests.SetUp()
+	router := tests.Setup()
 	subtests := []struct {
 		uri          string
 		responseCode int

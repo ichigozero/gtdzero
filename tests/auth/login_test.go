@@ -14,7 +14,7 @@ import (
 )
 
 func TestLogin(t *testing.T) {
-	router := tests.SetUp()
+	router := tests.Setup()
 	w := httptest.NewRecorder()
 
 	_, err := tests.Login(router, w)
@@ -24,7 +24,7 @@ func TestLogin(t *testing.T) {
 }
 
 func TestFailedLogin(t *testing.T) {
-	router := tests.SetUp()
+	router := tests.Setup()
 	subtests := []struct {
 		user         interface{}
 		contentType  string

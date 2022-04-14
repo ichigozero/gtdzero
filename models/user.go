@@ -12,5 +12,5 @@ type UserLoginTemplate struct {
 }
 
 type UserDB interface {
-	GetUser(username string, password string) (*User, error)
+	GetUser(username string) (*User, error)
 }

@@ -20,10 +20,9 @@ type mockUserDB struct {
 
 func (d *mockUserDB) GetUser(
 	username string,
-	password string,
 ) (*models.User, error) {
 	for _, user := range d.Users {
-		if user.Username == username && user.Password == password {
+		if user.Username == username {
 			return user, nil
 		}
 	}
@@ -94,7 +93,7 @@ func Setup() *gin.Engine {
 	user := models.User{
 		ID:       1,
 		Username: "john",
-		Password: "password",
+		Password: "$2a$12$udogIRFurk7EMHfALwSZZexk4K8salP3n7/bEV8pr8PAJ1Fztxcdq",
 	}
 
 	userDB := &mockUserDB{[]*models.User{&user}}

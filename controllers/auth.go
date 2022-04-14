@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/ichigozero/gtdzero/libs/auth"
 	"github.com/ichigozero/gtdzero/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthController struct {
@@ -28,13 +29,20 @@ func NewAuthController(
 
 func (a *AuthController) Login(c *gin.Context) {
 	var json models.UserLoginTemplate
+
 	err := c.ShouldBindJSON(&json)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
 		return
 	}
 
-	user, err := a.db.GetUser(json.Username, json.Password)
+	user, err := a.db.GetUser(json.Username)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid login"})
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(json.Password))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid login"})
 		return
@@ -62,7 +70,6 @@ func (a *AuthController) Login(c *gin.Context) {
 
 func (a *AuthController) Logout(c *gin.Context) {
 	_, err := a.client.Delete(c.Request)
-
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return

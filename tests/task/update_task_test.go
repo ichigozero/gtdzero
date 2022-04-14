@@ -15,7 +15,7 @@ import (
 )
 
 func TestUpdateTask(t *testing.T) {
-	router := tests.SetUp()
+	router := tests.Setup()
 	jsonStr, _ := json.Marshal(
 		&models.UpdateTaskTemplate{
 			Title:       "Title",
@@ -49,13 +49,14 @@ func TestUpdateTask(t *testing.T) {
 			Title:       "Title",
 			Description: "Description",
 			Done:        true,
+			UserID:      1,
 		},
 		data.Task,
 	)
 }
 
 func TestFailToUpdateTask(t *testing.T) {
-	router := tests.SetUp()
+	router := tests.Setup()
 	task := &models.UpdateTaskTemplate{
 		Title:       "Title",
 		Description: "Description",

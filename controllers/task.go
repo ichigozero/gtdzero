@@ -88,12 +88,6 @@ func (t *TaskController) UpdateTask(c *gin.Context) {
 		return
 	}
 
-	_, err = t.db.GetTask(userID, taskID)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
-		return
-	}
-
 	var json models.UpdateTaskTemplate
 
 	err = c.ShouldBindJSON(&json)
@@ -102,11 +96,18 @@ func (t *TaskController) UpdateTask(c *gin.Context) {
 		return
 	}
 
+	_, err = t.db.GetTask(userID, taskID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+
 	updatedTask := &models.Task{
 		ID:          taskID,
 		Title:       json.Title,
 		Description: json.Description,
 		Done:        json.Done,
+		UserID:      userID,
 	}
 
 	t.db.UpdateTask(updatedTask)

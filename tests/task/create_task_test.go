@@ -15,7 +15,7 @@ import (
 )
 
 func TestCreateTask(t *testing.T) {
-	router := tests.SetUp()
+	router := tests.Setup()
 	jsonStr, _ := json.Marshal(
 		&models.NewTaskTemplate{
 			Title:       "Title",
@@ -46,7 +46,7 @@ func TestCreateTask(t *testing.T) {
 type mockTemplate struct{}
 
 func TestFailToCreateTask(t *testing.T) {
-	router := tests.SetUp()
+	router := tests.Setup()
 	subtests := []struct {
 		task        interface{}
 		contentType string

@@ -12,7 +12,7 @@ import (
 )
 
 func TestLogout(t *testing.T) {
-	router := tests.SetUp()
+	router := tests.Setup()
 	w := httptest.NewRecorder()
 
 	accessToken, _ := tests.Login(router, w)
@@ -31,7 +31,7 @@ func TestLogout(t *testing.T) {
 }
 
 func TestFailedLogout(t *testing.T) {
-	router := tests.SetUp()
+	router := tests.Setup()
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/logout", nil)

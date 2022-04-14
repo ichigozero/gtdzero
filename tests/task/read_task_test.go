@@ -17,7 +17,7 @@ type tasksJSON struct {
 }
 
 func TestGetTasks(t *testing.T) {
-	router := tests.SetUp()
+	router := tests.Setup()
 	w := httptest.NewRecorder()
 
 	accessToken, _ := tests.Login(router, w)
@@ -39,7 +39,7 @@ type taskJSON struct {
 }
 
 func TestGetTask(t *testing.T) {
-	router := tests.SetUp()
+	router := tests.Setup()
 	w := httptest.NewRecorder()
 
 	accessToken, _ := tests.Login(router, w)
@@ -57,7 +57,7 @@ func TestGetTask(t *testing.T) {
 }
 
 func TestFailToGetTask(t *testing.T) {
-	router := tests.SetUp()
+	router := tests.Setup()
 	subtests := []struct {
 		uri          string
 		responseCode int

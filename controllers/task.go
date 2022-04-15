@@ -22,9 +22,8 @@ func NewTaskController(
 }
 
 func (t *TaskController) GetTasks(c *gin.Context) {
-	userID, err := t.client.Fetch(c.Request)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	userID := getUserID(c, t.client)
+	if userID == 0 {
 		return
 	}
 
@@ -34,9 +33,8 @@ func (t *TaskController) GetTasks(c *gin.Context) {
 }
 
 func (t *TaskController) GetTask(c *gin.Context) {
-	userID, err := t.client.Fetch(c.Request)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	userID := getUserID(c, t.client)
+	if userID == 0 {
 		return
 	}
 
@@ -56,15 +54,14 @@ func (t *TaskController) GetTask(c *gin.Context) {
 }
 
 func (t *TaskController) CreateTask(c *gin.Context) {
-	userID, err := t.client.Fetch(c.Request)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	userID := getUserID(c, t.client)
+	if userID == 0 {
 		return
 	}
 
 	var json models.NewTaskTemplate
 
-	err = c.ShouldBindJSON(&json)
+	err := c.ShouldBindJSON(&json)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
 		return
@@ -76,9 +73,8 @@ func (t *TaskController) CreateTask(c *gin.Context) {
 }
 
 func (t *TaskController) UpdateTask(c *gin.Context) {
-	userID, err := t.client.Fetch(c.Request)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	userID := getUserID(c, t.client)
+	if userID == 0 {
 		return
 	}
 
@@ -116,9 +112,8 @@ func (t *TaskController) UpdateTask(c *gin.Context) {
 }
 
 func (t *TaskController) DeleteTask(c *gin.Context) {
-	userID, err := t.client.Fetch(c.Request)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	userID := getUserID(c, t.client)
+	if userID == 0 {
 		return
 	}
 

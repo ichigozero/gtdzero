@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ichigozero/gtdzero/controllers"
@@ -90,6 +91,9 @@ func (d *mockTaskDB) DeleteTask(userID uint64, taskID uint64) error {
 }
 
 func Setup() *gin.Engine {
+	os.Setenv("ACCESS_SECRET", "access-secret")
+	os.Setenv("REFRESH_SECRET", "refresh-secret")
+
 	user := models.User{
 		ID:       1,
 		Username: "john",
@@ -128,7 +132,7 @@ func Setup() *gin.Engine {
 	return r
 }
 
-func Login(router *gin.Engine, w *httptest.ResponseRecorder) (string, error) {
+func Login(router *gin.Engine, w *httptest.ResponseRecorder) (tokens, error) {
 	jsonStr, _ := json.Marshal(
 		&models.UserLoginTemplate{
 			Username: "john",
@@ -143,42 +147,51 @@ func Login(router *gin.Engine, w *httptest.ResponseRecorder) (string, error) {
 	var data TokenJSON
 	err := json.NewDecoder(w.Body).Decode(&data)
 	if err != nil {
-		return "", errors.New("unauthorized")
+		return nil, err
 	}
 
-	return data.Tokens["access_token"], nil
+	return data.Tokens, nil
 }
 
 type AuthClientMock struct {
-	userID uint64
+	token map[string]uint64
 }
 
 func (a *AuthClientMock) Store(userID uint64, td *auth.TokenDetails) error {
-	a.userID = userID
+	m := make(map[string]uint64)
+
+	m[td.AccessUUID] = userID
+	m[td.RefreshUUID] = userID
+
+	a.token = m
+
 	return nil
 }
 
-func (a *AuthClientMock) Fetch(r *http.Request) (uint64, error) {
-	if a.userID == 0 {
+func (a *AuthClientMock) Fetch(tokenUUID string) (uint64, error) {
+	userID := a.token[tokenUUID]
+	if userID == 0 {
 		return 0, errors.New("unauthorized")
 	}
 
-	return a.userID, nil
+	return userID, nil
 }
 
-func (a *AuthClientMock) Delete(r *http.Request) (uint64, error) {
-	if a.userID == 0 {
-		return 0, errors.New("unauthorized")
+func (a *AuthClientMock) Delete(tokenUUID string) error {
+	userID := a.token[tokenUUID]
+	if userID == 0 {
+		return errors.New("unauthorized")
 	}
 
-	deleted := a.userID
-	a.userID = 0
+	delete(a.token, tokenUUID)
 
-	return deleted, nil
+	return nil
 }
+
+type tokens map[string]string
 
 type TokenJSON struct {
-	Tokens map[string]string `json:"tokens"`
+	Tokens tokens `json:"tokens"`
 }
 
 type ResultJSON struct {

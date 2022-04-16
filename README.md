@@ -2,14 +2,21 @@
 
 ToDo list API built in Go with Gin web framework.
 
+## System Diagram
+
+<p align="center">
+  <img src="./assets/diagram.jpg" />
+</p>
+
 ## API List
 
 ### Auth
 
-| HTTP Method | URI     |
-| ----------- | ------- |
-| POST        | /login  |
-| POST        | /logout |
+| HTTP Method | URI      |
+| ----------- | -------- |
+| POST        | /login   |
+| POST        | /logout  |
+| POST        | /refresh |
 
 ### Task
 

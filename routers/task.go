@@ -7,7 +7,7 @@ import (
 )
 
 func SetTaskRoutes(router *gin.Engine, tc *controllers.TaskController) {
-	v1 := router.Group("/todo/api/v1.0", auth.TokenValidator())
+	v1 := router.Group("/todo/api/v1.0", auth.AccessTokenValidator())
 	{
 		v1.GET("/tasks", tc.GetTasks)
 		v1.GET("/task/:id", tc.GetTask)

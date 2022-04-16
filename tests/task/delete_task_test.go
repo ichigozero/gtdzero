@@ -15,11 +15,11 @@ func TestDeleteTask(t *testing.T) {
 	router := tests.Setup()
 	w := httptest.NewRecorder()
 
-	accessToken, _ := tests.Login(router, w)
+	tokens, _ := tests.Login(router, w)
 
 	w = httptest.NewRecorder()
 	req, _ := http.NewRequest("DELETE", "/todo/api/v1.0/task/1", nil)
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tokens["access_token"]))
 
 	router.ServeHTTP(w, req)
 
@@ -48,12 +48,12 @@ func TestFailToDeleteTask(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	accessToken, _ := tests.Login(router, w)
+	tokens, _ := tests.Login(router, w)
 
 	for _, st := range subtests {
 		w = httptest.NewRecorder()
 		req, _ := http.NewRequest("DELETE", st.uri, nil)
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tokens["access_token"]))
 		router.ServeHTTP(w, req)
 
 		var data tests.ErrorJSON

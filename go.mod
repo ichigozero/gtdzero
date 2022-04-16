@@ -20,7 +20,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/twinj/uuid v1.0.0
 	github.com/ugorji/go v1.2.5 // indirect
-	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
+	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	gopkg.in/stretchr/testify.v1 v1.2.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gorm.io/driver/postgres v1.3.4

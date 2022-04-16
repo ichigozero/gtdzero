@@ -1,13 +1,24 @@
 package auth
 
 import (
-	"net/http"
+	"errors"
+	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/twinj/uuid"
 )
+
+type TokenDetails struct {
+	AccessToken       string
+	AccessUUID        string
+	AccessExpiration  int64
+	RefreshToken      string
+	RefreshUUID       string
+	RefreshExpiration int64
+}
 
 type Tokenizer interface {
 	Create(userID uint64) (*TokenDetails, error)
@@ -15,25 +26,22 @@ type Tokenizer interface {
 
 type tokenizer struct{}
 
-var _ Tokenizer = (*tokenizer)(nil)
-
 func NewTokenizer() Tokenizer {
 	return &tokenizer{}
 }
 
 func (t *tokenizer) Create(userID uint64) (*TokenDetails, error) {
 	td := &TokenDetails{}
-	td.AccessUuid = uuid.NewV4().String()
+	td.AccessUUID = uuid.NewV4().String()
 	td.AccessExpiration = time.Now().Add(time.Minute * 15).Unix()
 
-	td.RefreshUuid = uuid.NewV4().String()
+	td.RefreshUUID = GenerateRefreshUUID(td.AccessUUID)
 	td.RefreshExpiration = time.Now().Add(time.Hour * 24 * 7).Unix()
 
 	var err error
 
 	atClaims := jwt.MapClaims{}
-	atClaims["authorized"] = true
-	atClaims["uuid"] = td.AccessUuid
+	atClaims["uuid"] = td.AccessUUID
 	atClaims["user_id"] = userID
 	atClaims["exp"] = td.AccessExpiration
 
@@ -44,7 +52,8 @@ func (t *tokenizer) Create(userID uint64) (*TokenDetails, error) {
 	}
 
 	rtClaims := jwt.MapClaims{}
-	rtClaims["uuid"] = td.RefreshUuid
+	rtClaims["access_uuid"] = td.AccessUUID
+	rtClaims["refresh_uuid"] = td.RefreshUUID
 	rtClaims["user_id"] = userID
 	rtClaims["exp"] = td.RefreshExpiration
 
@@ -57,15 +66,84 @@ func (t *tokenizer) Create(userID uint64) (*TokenDetails, error) {
 	return td, nil
 }
 
-func ValidateToken(r *http.Request) error {
-	token, err := verifyToken(r)
+func GenerateRefreshUUID(accessUUID string) string {
+	return uuid.NewV5(uuid.NameSpaceURL, accessUUID).String()
+}
+
+func GetTokenClaims(tokenString string, secret string) (jwt.MapClaims, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("invalid signing method: %v", token.Header["alg"])
+		}
+		return []byte(secret), nil
+	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if _, ok := token.Claims.(jwt.Claims); !ok && !token.Valid {
-		return err
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return nil, errors.New("invalid token")
 	}
 
-	return nil
+	return claims, err
+}
+
+type AccessTokenDetails struct {
+	UUID   string
+	UserID uint64
+}
+
+func ExtractAccessToken(claims jwt.MapClaims) (*AccessTokenDetails, error) {
+	uuid, ok := claims["uuid"].(string)
+	if !ok {
+		return nil, errors.New("invalid uuid conversion")
+	}
+
+	userID, err := strconv.ParseUint(
+		fmt.Sprintf("%.f", claims["user_id"]),
+		10,
+		64,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AccessTokenDetails{
+		UUID:   uuid,
+		UserID: userID,
+	}, nil
+}
+
+type RefreshTokenDetails struct {
+	AccessUUID  string
+	RefreshUUID string
+	UserID      uint64
+}
+
+func ExtractRefreshToken(claims jwt.MapClaims) (*RefreshTokenDetails, error) {
+	accessUUID, ok := claims["access_uuid"].(string)
+	if !ok {
+		return nil, errors.New("invalid uuid conversion")
+	}
+
+	refreshUUID, ok := claims["refresh_uuid"].(string)
+	if !ok {
+		return nil, errors.New("invalid uuid conversion")
+	}
+
+	userID, err := strconv.ParseUint(
+		fmt.Sprintf("%.f", claims["user_id"]),
+		10,
+		64,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &RefreshTokenDetails{
+		AccessUUID:  accessUUID,
+		RefreshUUID: refreshUUID,
+		UserID:      userID,
+	}, nil
 }

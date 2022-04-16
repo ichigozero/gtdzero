@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ichigozero/gtdzero/libs/auth"
@@ -48,16 +49,99 @@ func (a *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	tokenDetails, err := a.tokenizer.Create(user.ID)
+	tokens, err := createStoreToken(a.tokenizer, a.client, user.ID)
 	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	err = a.client.Store(user.ID, tokenDetails)
-	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+	c.JSON(http.StatusCreated, gin.H{"tokens": tokens})
+}
+
+func (a *AuthController) Logout(c *gin.Context) {
+	details := getAccessTokenDetails(c, a.client)
+	if details == nil {
 		return
+	}
+
+	err := a.client.Delete(details.UUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	refreshUUID := auth.GenerateRefreshUUID(details.UUID)
+	err = a.client.Delete(refreshUUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"result": true})
+}
+
+func (a *AuthController) Refresh(c *gin.Context) {
+	m := map[string]string{}
+	if err := c.ShouldBindJSON(&m); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
+		return
+	}
+
+	t := m["refresh_token"]
+
+	cl, err := auth.GetTokenClaims(t, os.Getenv("REFRESH_SECRET"))
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	d, err := auth.ExtractRefreshToken(cl)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+		return
+	}
+
+	userID, err := a.client.Fetch(d.RefreshUUID)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	if d.UserID != userID {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	err = a.client.Delete(d.AccessUUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = a.client.Delete(d.RefreshUUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	tokens, err := createStoreToken(a.tokenizer, a.client, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"tokens": tokens})
+}
+
+func createStoreToken(t auth.Tokenizer, c auth.AuthClient, userID uint64) (map[string]string, error) {
+	tokenDetails, err := t.Create(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.Store(userID, tokenDetails)
+	if err != nil {
+		return nil, err
 	}
 
 	tokens := map[string]string{
@@ -65,15 +149,5 @@ func (a *AuthController) Login(c *gin.Context) {
 		"refresh_token": tokenDetails.RefreshToken,
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"tokens": tokens})
-}
-
-func (a *AuthController) Logout(c *gin.Context) {
-	_, err := a.client.Delete(c.Request)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"result": true})
+	return tokens, nil
 }

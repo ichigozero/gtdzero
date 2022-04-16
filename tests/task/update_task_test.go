@@ -25,7 +25,7 @@ func TestUpdateTask(t *testing.T) {
 	)
 	w := httptest.NewRecorder()
 
-	accessToken, _ := tests.Login(router, w)
+	tokens, _ := tests.Login(router, w)
 
 	w = httptest.NewRecorder()
 	req, _ := http.NewRequest(
@@ -34,7 +34,7 @@ func TestUpdateTask(t *testing.T) {
 		bytes.NewBuffer(jsonStr),
 	)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tokens["access_token"]))
 	router.ServeHTTP(w, req)
 
 	var data taskJSON
@@ -106,7 +106,7 @@ func TestFailToUpdateTask(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	accessToken, _ := tests.Login(router, w)
+	tokens, _ := tests.Login(router, w)
 
 	for _, st := range subtests {
 		w = httptest.NewRecorder()
@@ -121,7 +121,7 @@ func TestFailToUpdateTask(t *testing.T) {
 
 		req, _ := http.NewRequest("PUT", st.uri, bytes.NewBuffer(buf))
 		req.Header.Set("Content-Type", st.contentType)
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tokens["access_token"]))
 		router.ServeHTTP(w, req)
 
 		var data tests.ErrorJSON

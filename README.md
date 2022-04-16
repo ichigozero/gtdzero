@@ -64,6 +64,27 @@ Content-Length: 15
 {"result":true}
 ```
 
+### Refresh Token
+
+```bash
+curl -i -X "POST" "http://localhost:8080/refresh" \
+	-H 'Accept: application/json' \
+	-H 'Content-Type: application/json' \
+	-d '{"refresh_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NfdXVpZCI6IjgyOTJhOWUwLTAzNjItNDA5My1iZGRkLTk5N2YwM2I5MzljZCIsImV4cCI6MTY1MDcxNDAxOSwicmVmcmVzaF91dWlkIjoiNjdiOTM1MGEtNWQ3Yi01ZjJiLThhMDItZmM0MjgxMzkxZmZjIiwidXNlcl9pZCI6MX0.LW4xBvlFIvL6AIASSyiy6zEW8Mqu-wOf95M7gDcYo2o"}'
+```
+
+Output:
+
+```
+HTTP/1.1 201 Created
+Content-Type: application/json; charset=utf-8
+Date: Sat, 16 Apr 2022 11:42:19 GMT
+Content-Length: 496
+
+{"tokens":{"access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NTAxMTAyMzksInVzZXJfaWQiOjEsInV1aWQiOiIzYTY3NmQyNi0xY2MyLTQ4NjYtOGEzNC1lYjMzZWI1NGM0MjAifQ.3oRD-vXVrEnA4LG1NjhxJh_-70_I0CGoVZZnAwqRb1w","refresh_token":"eyJhbGciOiJIUzI1NiIsInR5cC
+I6IkpXVCJ9.eyJhY2Nlc3NfdXVpZCI6IjNhNjc2ZDI2LTFjYzItNDg2Ni04YTM0LWViMzNlYjU0YzQyMCIsImV4cCI6MTY1MDcxNDEzOSwicmVmcmVzaF91dWlkIjoiZTc2NjUyMmItMWVmYy01NzY3LWJlODktMWE1NjE0OTJjNjJlIiwidXNlcl9pZCI6MX0.96-3JesxyL_dCZXEH8oml9vGguc3coKomsygUT4RjbA"}}⏎
+```
+
 ### Create Task
 
 ```bash

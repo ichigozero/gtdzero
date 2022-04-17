@@ -1,48 +1,48 @@
 # gtdzero
 
-## Translations
+## 翻訳版
 
-[:jp: 日本語版](README.ja.md)
+[:us: 英語版](README.md)
 
-## About
+## 概要
 
-ToDo list API built in Go with Gin web framework.
+Go 言語の Gin ウェブフレームワークで開発された ToDo リスト API。
 
-## System Diagram
+## システム図
 
 <p align="center">
   <img src="./assets/diagram.jpg" />
 </p>
 
-## API List
+## API 一覧
 
-### Auth
+### 認証
 
-| HTTP Method | URI      | Action         |
-| ----------- | -------- | -------------- |
-| POST        | /login   | Login user     |
-| POST        | /logout  | Logout user    |
-| POST        | /refresh | Refresh tokens |
+| HTTP メソード | URI      | アクション           |
+| ------------- | -------- | -------------------- |
+| POST          | /login   | ユーザーのログイン   |
+| POST          | /logout  | ユーザーのログアウト |
+| POST          | /refresh | トークン再生性       |
 
-- Login generates and stores access and refresh tokens
-- Logout deletes stored access and refresh tokens
-- Refresh deletes stored access and refresh tokens and generates new ones
+- ログインはアクセスとリフレッシュトークンを生成し保存する
+- ログアウトは保存されたアクセスとリフレッシュトークンを削除する
+- リフレッシュは保存されたアクセスとリフレッシュトークンを削除し新規トークンを生成する
 
-### Task
+### タスク
 
-| HTTP Method | URI                     | Action                  |
-| ----------- | ----------------------- | ----------------------- |
-| GET         | /todo/api/v1.0/tasks    | Retrieve list of tasks  |
-| GET         | /todo/api/v1.0/task/:id | Retrieve a task         |
-| POST        | /todo/api/v1.0/tasks    | Create a new task       |
-| PUT         | /todo/api/v1.0/task/:id | Update an existing task |
-| DELETE      | /todo/api/v1.0/task/:id | Delete a task           |
+| HTTP メソード | URI                     | アクション       |
+| ------------- | ----------------------- | ---------------- |
+| GET           | /todo/api/v1.0/tasks    | タスク一覧の取得 |
+| GET           | /todo/api/v1.0/task/:id | タスクの取得     |
+| POST          | /todo/api/v1.0/tasks    | 新規タスクの作成 |
+| PUT           | /todo/api/v1.0/task/:id | 既存タスクの更新 |
+| DELETE        | /todo/api/v1.0/task/:id | タスクの削除     |
 
-- Access token is required to access Task APIs
+- タスク API をアクセスする際にアクセストークンが必要
 
-## Examples
+## 例
 
-### Login
+### ログイン
 
 ```bash
 $ curl -i -X "POST" "http://localhost:8080/login" \
@@ -51,7 +51,7 @@ $ curl -i -X "POST" "http://localhost:8080/login" \
 	-d $'{"username": "admin", "password": "password"}'
 ```
 
-Output:
+出力:
 
 ```
 HTTP/1.1 201 Created
@@ -63,7 +63,7 @@ Content-Length: 439
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NTA1NDQwMTEsInVzZXJfaWQiOjEsInV1aWQiOiIyY2UzZTlkYS1kZGE5LTQ3OTMtYTE1Ni04ZjMwMzM5ZWQxM2UifQ.pP6RPF3g8NJvmc6ihm-zWH2if3Oz7XL7Ci957ekicbM"}}⏎
 ```
 
-### Logout
+### ログアウト
 
 ```bash
 curl -i -X "POST" "http://localhost:8080/logout" \
@@ -72,7 +72,7 @@ curl -i -X "POST" "http://localhost:8080/logout" \
 	-H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJleHAiOjE2NDk5NDAxMTEsInVzZXJfaWQiOjEsInV1aWQiOiJiY2IwZjY4ZS03ZjQwLTQ3ZmYtYTM3OS0wZmRlOGEzNDBkNzUifQ.biW4Iz1JKrPdHdmLxoR5Z2VXsbFY9GyvuGXCDJuvRqo'
 ```
 
-Output:
+出力:
 
 ```
 HTTP/1.1 200 OK
@@ -83,7 +83,7 @@ Content-Length: 15
 {"result":true}
 ```
 
-### Refresh Token
+### トークン再生性
 
 ```bash
 curl -i -X "POST" "http://localhost:8080/refresh" \
@@ -92,7 +92,7 @@ curl -i -X "POST" "http://localhost:8080/refresh" \
 	-d '{"refresh_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NfdXVpZCI6IjgyOTJhOWUwLTAzNjItNDA5My1iZGRkLTk5N2YwM2I5MzljZCIsImV4cCI6MTY1MDcxNDAxOSwicmVmcmVzaF91dWlkIjoiNjdiOTM1MGEtNWQ3Yi01ZjJiLThhMDItZmM0MjgxMzkxZmZjIiwidXNlcl9pZCI6MX0.LW4xBvlFIvL6AIASSyiy6zEW8Mqu-wOf95M7gDcYo2o"}'
 ```
 
-Output:
+出力:
 
 ```
 HTTP/1.1 201 Created
@@ -104,7 +104,7 @@ Content-Length: 496
 I6IkpXVCJ9.eyJhY2Nlc3NfdXVpZCI6IjNhNjc2ZDI2LTFjYzItNDg2Ni04YTM0LWViMzNlYjU0YzQyMCIsImV4cCI6MTY1MDcxNDEzOSwicmVmcmVzaF91dWlkIjoiZTc2NjUyMmItMWVmYy01NzY3LWJlODktMWE1NjE0OTJjNjJlIiwidXNlcl9pZCI6MX0.96-3JesxyL_dCZXEH8oml9vGguc3coKomsygUT4RjbA"}}⏎
 ```
 
-### Create Task
+### タスク作成
 
 ```bash
 $ curl -i -X "POST" "http://localhost:8080/todo/api/v1.0/tasks" \
@@ -114,7 +114,7 @@ $ curl -i -X "POST" "http://localhost:8080/todo/api/v1.0/tasks" \
 	-d '{"title":"Read a book", "description": "Foo"}'
 ```
 
-Output:
+出力:
 
 ```
 HTTP/1.1 201 Created

@@ -58,7 +58,7 @@ func (a *AuthController) Login(c *gin.Context) {
 	c.SetCookie(
 		"refreshToken",
 		tokens.RefreshToken,
-		int(auth.RefreshTokenExpiry),
+		int(auth.RefreshTokenExpiry()), // TODO expiry must be in sync
 		"/",
 		"127.0.0.1",
 		false,

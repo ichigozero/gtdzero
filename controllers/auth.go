@@ -55,6 +55,15 @@ func (a *AuthController) Login(c *gin.Context) {
 		return
 	}
 
+	c.SetCookie(
+		"refreshToken",
+		tokens.RefreshToken,
+		int(auth.RefreshTokenExpiry),
+		"/",
+		"127.0.0.1",
+		false,
+		true,
+	)
 	c.JSON(http.StatusCreated, gin.H{"tokens": tokens})
 }
 
@@ -133,7 +142,12 @@ func (a *AuthController) Refresh(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"tokens": tokens})
 }
 
-func createStoreToken(t auth.Tokenizer, c auth.AuthClient, userID uint64) (map[string]string, error) {
+type tokens struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+func createStoreToken(t auth.Tokenizer, c auth.AuthClient, userID uint64) (*tokens, error) {
 	tokenDetails, err := t.Create(userID)
 	if err != nil {
 		return nil, err
@@ -144,10 +158,8 @@ func createStoreToken(t auth.Tokenizer, c auth.AuthClient, userID uint64) (map[s
 		return nil, err
 	}
 
-	tokens := map[string]string{
-		"access_token":  tokenDetails.AccessToken,
-		"refresh_token": tokenDetails.RefreshToken,
-	}
-
-	return tokens, nil
+	return &tokens{
+		AccessToken:  tokenDetails.AccessToken,
+		RefreshToken: tokenDetails.RefreshToken,
+	}, nil
 }

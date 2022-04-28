@@ -11,6 +11,11 @@ import (
 	"github.com/twinj/uuid"
 )
 
+var (
+	AccessTokenExpiry  = time.Now().Add(time.Minute * 15).Unix()
+	RefreshTokenExpiry = time.Now().Add(time.Hour * 24 * 7).Unix()
+)
+
 type TokenDetails struct {
 	AccessToken       string
 	AccessUUID        string
@@ -33,10 +38,10 @@ func NewTokenizer() Tokenizer {
 func (t *tokenizer) Create(userID uint64) (*TokenDetails, error) {
 	td := &TokenDetails{}
 	td.AccessUUID = uuid.NewV4().String()
-	td.AccessExpiration = time.Now().Add(time.Minute * 15).Unix()
+	td.AccessExpiration = AccessTokenExpiry
 
 	td.RefreshUUID = GenerateRefreshUUID(td.AccessUUID)
-	td.RefreshExpiration = time.Now().Add(time.Hour * 24 * 7).Unix()
+	td.RefreshExpiration = RefreshTokenExpiry
 
 	var err error
 

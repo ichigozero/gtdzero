@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"text/tabwriter"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v7"
 	"github.com/ichigozero/gtdzero/controllers"
@@ -22,9 +24,9 @@ func main() {
 	fs := flag.NewFlagSet("gtdzero", flag.ExitOnError)
 	var (
 		httpAddr = fs.String(
-			"grpc.addr",
+			"http.addr",
 			getEnv("HTTP_ADDR", ":8080"),
-			"gRPC listen address",
+			"HTTP listen address",
 		)
 		redisURL = fs.String(
 			"redis.url",
@@ -67,6 +69,15 @@ func main() {
 	authClient := auth.NewAuthClient(client)
 
 	r := gin.Default()
+	// TODO set proper CORS config
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
 	ac := controllers.NewAuthController(userDB, tokenizer, authClient)
 	tc := controllers.NewTaskController(taskDB, authClient)
 

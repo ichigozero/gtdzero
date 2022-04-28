@@ -2,10 +2,10 @@ package auth
 
 import (
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ichigozero/gtdzero"
 	"github.com/ichigozero/gtdzero/libs/auth"
 )
 
@@ -22,7 +22,7 @@ func AccessTokenValidator() gin.HandlerFunc {
 			return
 		}
 
-		claims, err := auth.GetTokenClaims(strArr[1], os.Getenv("ACCESS_SECRET"))
+		claims, err := auth.GetTokenClaims(strArr[1], gtdzero.AccessSecret)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()

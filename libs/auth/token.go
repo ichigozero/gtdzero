@@ -3,11 +3,11 @@ package auth
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strconv"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/ichigozero/gtdzero"
 	"github.com/twinj/uuid"
 )
 
@@ -51,7 +51,7 @@ func (t *tokenizer) Create(userID uint64) (*TokenDetails, error) {
 	atClaims["exp"] = td.AccessExpiration
 
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
-	td.AccessToken, err = at.SignedString([]byte(os.Getenv("ACCESS_SECRET")))
+	td.AccessToken, err = at.SignedString([]byte(gtdzero.AccessSecret))
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (t *tokenizer) Create(userID uint64) (*TokenDetails, error) {
 	rtClaims["exp"] = td.RefreshExpiration
 
 	rt := jwt.NewWithClaims(jwt.SigningMethodHS256, rtClaims)
-	td.RefreshToken, err = rt.SignedString([]byte(os.Getenv("REFRESH_SECRET")))
+	td.RefreshToken, err = rt.SignedString([]byte(gtdzero.RefreshSecret))
 	if err != nil {
 		return nil, err
 	}
